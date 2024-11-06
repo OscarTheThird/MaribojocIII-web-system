@@ -72,10 +72,10 @@ function toggleNotifi(event) {
         box.style.height = `300px`;
         box.style.opacity = 1;
         notificationBoxVisible = true;
-
+        notificationBadgeCount -= 1;
+        notificationBadge.textContent = notificationBadgeCount;
         // Reset notification badge and display a toast message
         notificationBadge.textContent = 0;
-        showToast("Notifications retrieved and displayed.");
         retrieveLocations();
     }
 }
@@ -97,6 +97,7 @@ function toggleLoginBox(event) {
         loginBox.style.height = '300px';
         loginBox.style.opacity = 1;
         loginBoxVisible = true;
+        notificationBadge
         retrieveLoginHistory();  // Call to fetch login history when the box is opened
     } 
 }
@@ -214,6 +215,7 @@ async function retrieveLocations() {
                 notificationItem.className = 'notifi-item';
                 notificationItem.innerHTML = `<div class="text"><h4>Location: ${data.action}, Time: ${new Date(data.timestamp).toLocaleString()}</h4></div>`;
                 notificationList.appendChild(notificationItem);
+                
             });
         }
     } catch (error) {
@@ -242,6 +244,9 @@ async function searchFunction() {
                 action: result.display_name,
                 timestamp: new Date().toISOString()
             });
+            notificationBadgeCount++; 
+            notificationBadge.textContent = notificationBadgeCount;
+            notificationBadgeCount = 0;
             retrieveLocations();
         } else {
             alert('Location not found.');
