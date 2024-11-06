@@ -103,54 +103,7 @@ const firebaseConfig = {
     // Firebase Authentication - Login Process
     let login = document.getElementById("log_in");
 
-    /*login.addEventListener('click', async (e) => {
-        e.preventDefault(); // Prevent form submission if it's part of a form
-        let email = document.getElementById("loginEmail").value;
-        let password = document.getElementById("loginPassword").value;
-        
-        // Check if email and password are empty
-        if (email === '' || password === '') {
-            showToast('<i class="fa-solid fa-circle-xmark"></i> Please enter your email and password.'); // Show the error toast if inputs are empty
-            return; // Stop the function from executing further
-        }
-        
-        try {
-            console.log('Attempting to log in with:', email); // Debugging log
-            const userCredentials = await signInWithEmailAndPassword(auth, email, password);
-            const user = userCredentials.user;
     
-            // Check if the user's email is verified
-            await user.reload(); // Refresh user data to get updated email verification status
-            if (!user.emailVerified) {
-                showToast('<i class="fa-solid fa-circle-xmark"></i>Your account is not verified. Please check your email. Thank you!');
-                return; // Stop further execution
-            }
-            loginwebhook();
-            // Redirect to the map page if email is verified
-            window.location.href = "map.html";
-        } catch (error) {
-            console.error('Caught an error during sign in:', error); // Log the entire error object
-            let errorMessage;
-    
-            // Use the error code to set the error message
-            if (error.code === 'auth/user-not-found') {
-                errorMessage = '<i class="fa-solid fa-circle-xmark"></i> Email not found. Please register.';
-            } else if (error.code === 'auth/wrong-password') {
-                errorMessage = '<i class="fa-solid fa-circle-xmark"></i> Incorrect password. Please try again.';
-            } else if (error.code === 'auth/invalid-email') {
-                errorMessage = '<i class="fa-solid fa-circle-xmark"></i> Invalid email address.';
-            } else if (error.code === 'auth/too-many-requests') {
-                errorMessage = '<i class="fa-solid fa-circle-xmark"></i> Too many login attempts. Please try again later.';
-            } else if (error.code === 'auth/operation-not-allowed') {
-                errorMessage = '<i class="fa-solid fa-circle-xmark"></i> This sign-in method is not allowed.';
-            } else {
-                errorMessage = '<i class="fa-solid fa-circle-xmark"></i> Error during login. Please try again.';
-            }
-    
-            showToast(errorMessage); // Show the error message
-        }
-    });*/
-
     login.addEventListener('click', async (e) => {
         e.preventDefault(); // Prevent form submission if it's part of a form
         let email = document.getElementById("loginEmail").value;
@@ -207,8 +160,11 @@ const firebaseConfig = {
         const timestamp = new Date().toISOString();
     
         try {
-            // Add login history to Firestore
-            const docRef = await db.collection('loginHistory').doc(uid).collection('history').add({
+            // Define the collection path for the user's login history
+            const loginHistoryRef = collection(db, 'loginHistory', uid, 'history');
+    
+            // Add a new login entry with email and timestamp
+            const docRef = await addDoc(loginHistoryRef, {
                 email: email,
                 time: timestamp,
             });
@@ -218,3 +174,4 @@ const firebaseConfig = {
             console.error('Error writing login history to Firestore:', error);
         }
     }
+    

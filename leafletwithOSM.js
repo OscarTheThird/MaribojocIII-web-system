@@ -149,7 +149,7 @@ document.getElementById('loginHistory')?.addEventListener('click', (event) => {
 
 // Function to retrieve login history
 async function retrieveLoginHistory() {
-    const user = firebase.auth().currentUser; // Check if the user is logged in
+    const user = auth.currentUser; // Check if the user is logged in
     if (!user) {
         console.error("User is not logged in.");
         alert('You need to log in to view your login history.');
@@ -161,22 +161,19 @@ async function retrieveLoginHistory() {
     loginList.innerHTML = ''; // Clear any existing login history entries
 
     try {
-        // Retrieve login history from Firestore
-        const loginHistoryRef = db.collection('loginHistory').doc(uid).collection('history');
-        const querySnapshot = await loginHistoryRef.get();
+        const loginHistoryRef = collection(db, 'loginHistory', uid, 'history');
+        const querySnapshot = await getDocs(loginHistoryRef);
 
-        // Check if there are any login history records
         if (querySnapshot.empty) {
             loginList.innerHTML = '<p>No login history found.</p>';
         } else {
-            // Sort and display each login timestamp
             const loginEntries = [];
             querySnapshot.forEach((doc) => {
                 loginEntries.push(doc.data());
             });
 
             loginEntries
-                .sort((a, b) => new Date(b.time) - new Date(a.time)) // Sort by time descending
+                .sort((a, b) => new Date(b.time) - new Date(a.time))
                 .forEach((entry) => {
                     const loginItem = document.createElement('div');
                     loginItem.className = 'login-item';
@@ -192,17 +189,22 @@ async function retrieveLoginHistory() {
 
 
 async function retrieveLocations() {
+    const user = auth.currentUser;
+    if (!user) {
+        alert('User is not logged in.');
+        return;
+    }
+
     notificationList.innerHTML = ''; // Clear previous notifications
 
     try {
-        const snapshot = await getDocs(collection(db, 'locations')); // No UID here
+        const snapshot = await getDocs(collection(db, 'notifications', user.uid, 'userNotifications'));
         const notifications = [];
 
         snapshot.forEach(doc => {
             notifications.push({ id: doc.id, ...doc.data() });
         });
 
-        // Update notificationCount
         notificationCount = notifications.length;
         document.getElementById('notificationCount').textContent = notificationCount;
 
@@ -215,7 +217,6 @@ async function retrieveLocations() {
                 notificationItem.className = 'notifi-item';
                 notificationItem.innerHTML = `<div class="text"><h4>Location: ${data.action}, Time: ${new Date(data.timestamp).toLocaleString()}</h4></div>`;
                 notificationList.appendChild(notificationItem);
-                
             });
         }
     } catch (error) {
@@ -223,6 +224,7 @@ async function retrieveLocations() {
         alert('Failed to retrieve notifications. Please try again later.');
     }
 }
+
 
 
 async function searchFunction() {
@@ -239,15 +241,19 @@ async function searchFunction() {
             results.addLayer(L.marker(latlng).bindPopup(result.display_name).openPopup());
             map.setView(latlng, 13);
 
-            // Save the search result globally in Firestore
-            await addDoc(collection(db, 'locations'), {  // No UID here
-                action: result.display_name,
-                timestamp: new Date().toISOString()
-            });
-            notificationBadgeCount++; 
-            notificationBadge.textContent = notificationBadgeCount;
-            notificationBadgeCount = 0;
-            retrieveLocations();
+            // Store notification under the user's UID
+            const user = auth.currentUser;
+            if (user) {
+                await addDoc(collection(db, 'notifications', user.uid, 'userNotifications'), {
+                    action: result.display_name,
+                    timestamp: new Date().toISOString()
+                });
+                notificationBadgeCount++; 
+                notificationBadge.textContent = notificationBadgeCount;
+                retrieveLocations(); // Update to retrieve only the current user’s notifications
+            } else {
+                alert("User is not logged in. Please log in to save your search.");
+            }
         } else {
             alert('Location not found.');
         }
@@ -256,6 +262,7 @@ async function searchFunction() {
         alert('An error occurred while searching.');
     }
 }
+
 
 // Event listeners for the search button
 document.getElementById('searchButton')?.addEventListener('click', searchFunction);
