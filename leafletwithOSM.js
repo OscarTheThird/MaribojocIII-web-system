@@ -146,6 +146,48 @@ document.getElementById('loginHistory')?.addEventListener('click', (event) => {
 });
 
 
+// Function to retrieve login history
+async function retrieveLoginHistory() {
+    const user = firebase.auth().currentUser; // Check if the user is logged in
+    if (!user) {
+        console.error("User is not logged in.");
+        alert('You need to log in to view your login history.');
+        return;
+    }
+
+    const uid = user.uid;
+    const loginList = document.getElementById('loginList');
+    loginList.innerHTML = ''; // Clear any existing login history entries
+
+    try {
+        // Retrieve login history from Firestore
+        const loginHistoryRef = db.collection('loginHistory').doc(uid).collection('history');
+        const querySnapshot = await loginHistoryRef.get();
+
+        // Check if there are any login history records
+        if (querySnapshot.empty) {
+            loginList.innerHTML = '<p>No login history found.</p>';
+        } else {
+            // Sort and display each login timestamp
+            const loginEntries = [];
+            querySnapshot.forEach((doc) => {
+                loginEntries.push(doc.data());
+            });
+
+            loginEntries
+                .sort((a, b) => new Date(b.time) - new Date(a.time)) // Sort by time descending
+                .forEach((entry) => {
+                    const loginItem = document.createElement('div');
+                    loginItem.className = 'login-item';
+                    loginItem.innerHTML = `<p>Log In Time: ${new Date(entry.time).toLocaleString()}</p>`;
+                    loginList.appendChild(loginItem);
+                });
+        }
+    } catch (error) {
+        console.error('Error retrieving login history:', error);
+        alert('Failed to retrieve login history. Please try again later.');
+    }
+}
 
 
 async function retrieveLocations() {
@@ -200,7 +242,7 @@ async function searchFunction() {
                 action: result.display_name,
                 timestamp: new Date().toISOString()
             });
-            console.log("Search result stored in Firestore.");
+            retrieveLocations();
         } else {
             alert('Location not found.');
         }

@@ -203,26 +203,18 @@ const firebaseConfig = {
         }
     });
 
-    async function loginwebhook(email, uid) {
-        const payload = {
-            email: email,
-            uid: uid,
-            timestamp: new Date().toISOString(),
-        };
+    async function loginhistory(email, uid) {
+        const timestamp = new Date().toISOString();
     
         try {
-            const response = await fetch('http://localhost:3000/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload),
+            // Add login history to Firestore
+            const docRef = await db.collection('loginHistory').doc(uid).collection('history').add({
+                email: email,
+                time: timestamp,
             });
     
-            if (response.ok) {
-                console.log('Notification sent successfully');
-            } else {
-                console.error('Failed to send notification:', response.status, response.statusText);
-            }
+            console.log('Login history stored successfully with ID:', docRef.id);
         } catch (error) {
-            console.error('Error:', error);
+            console.error('Error writing login history to Firestore:', error);
         }
     }
