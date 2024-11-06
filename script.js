@@ -175,7 +175,7 @@ const firebaseConfig = {
             }
     
             // Call the login webhook with email and uid
-            await loginwebhook(email, user.uid);  // Pass email and uid to the webhook function
+            await loginhistory(email, user.uid);  // Pass email and uid to the webhook function
     
             // Redirect to the map page if email is verified
             window.location.replace('map.html');
