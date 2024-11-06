@@ -72,9 +72,6 @@ function toggleNotifi(event) {
         box.style.height = `300px`;
         box.style.opacity = 1;
         notificationBoxVisible = true;
-        notificationBadgeCount -= 1;
-        notificationBadge.textContent = notificationBadgeCount;
-        // Reset notification badge and display a toast message
         notificationBadge.textContent = 0;
         retrieveLocations();
     }
@@ -250,6 +247,7 @@ async function searchFunction() {
                 });
                 notificationBadgeCount++; 
                 notificationBadge.textContent = notificationBadgeCount;
+                notificationBadgeCount = 0;
                 retrieveLocations(); // Update to retrieve only the current user’s notifications
             } else {
                 alert("User is not logged in. Please log in to save your search.");
